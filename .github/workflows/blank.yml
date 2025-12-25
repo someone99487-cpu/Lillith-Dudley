@@ -1,423 +1,161 @@
-name: 🚀 SERVER AI STV PREMIUM
+name: MZWEBSITE
 
 on:
   workflow_dispatch:
     inputs:
       duration:
-        description: '🕐 Durasi Penggunaan'
+        description: 'Durasi penggunaan'
         required: false
         default: '5h40m'
         type: choice
         options:
-        - '1h'
-        - '3h' 
-        - '5h40m'
+          - '1h'
+          - '3h'
+          - '5h40m'
 
 jobs:
-  Premium-RDP-Setup:
-    runs-on: windows-latest
+  SETUP:
+    runs-on: windows-2019
     timeout-minutes: 340
-    
+
     steps:
-      # BANNER SELAMAT DATANG
-      - name: 🎯 MULAI SISTEM
-        run: |
-          Write-Host ""
-          Write-Host ""
-          Write-Host "🤖 AI STV PREMIUM RDP SERVER" -ForegroundColor Yellow
-          Write-Host "⚡ Powered by AI STV" -ForegroundColor Green
-          Write-Host "🕒 Waktu: ${{ github.event.inputs.duration }}" -ForegroundColor Magenta
-          Write-Host ""
-          
-          # Efek loading
-          $frames = @('⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷')
-          for($i=0; $i -lt 10; $i++) {
-              Write-Host "`r🚀 Sedang menginisialisasi sistem... $($frames[$i % 8])" -NoNewline -ForegroundColor Blue
-              Start-Sleep -Milliseconds 100
-          }
-          Write-Host "`r✅ Sistem sudah siap!                    " -ForegroundColor Green
+    - name: MULAI
+      run: |
+        Write-Host ""
+        Write-Host "MZWEBSITE" -ForegroundColor Yellow
+        Write-Host "Durasi : ${{ github.event.inputs.duration }}" -ForegroundColor Cyan
+        Write-Host "Proses dimulai..."
+        Start-Sleep 2
+        Write-Host "Sistem siap." -ForegroundColor Green
 
-      # KONFIGURASI LANJUTAN
-      - name: 🔧 KONFIGURASI SISTEM
-        run: |
-          Write-Host ""
-          Write-Host "🛠️  SEDANG MENGONFIGURASI SISTEM" -ForegroundColor Yellow
-          
-          $steps = @(
-              @{Name="Aktifkan Remote Desktop"; Script={ 
-                  Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0 -Force
-              }},
-              @{Name="Matikan Autentikasi Jaringan"; Script={
-                  Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 0 -Force
-              }},
-              @{Name="Konfigurasi Keamanan RDP"; Script={
-                  Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "SecurityLayer" -Value 0 -Force
-                  Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 0 -Force
-              }},
-              @{Name="Buka Port 3389 Firewall"; Script={
-                  netsh advfirewall firewall add rule name="RDP-Premium" dir=in action=allow protocol=TCP localport=3389 profile=any
-                  netsh advfirewall firewall add rule name="RDP-Premium-Out" dir=out action=allow protocol=TCP localport=3389 profile=any
-              }},
-              @{Name="Mulai Layanan"; Script={
-                  Set-Service -Name TermService -StartupType Automatic -ErrorAction SilentlyContinue
-                  Set-Service -Name UmRdpService -StartupType Automatic -ErrorAction SilentlyContinue
-                  Start-Service -Name TermService -ErrorAction SilentlyContinue
-                  Start-Service -Name UmRdpService -ErrorAction SilentlyContinue
-              }}
-          )
-          
-          foreach($step in $steps) {
-              Write-Host "│ 📋 $($step.Name)..." -NoNewline -ForegroundColor White
-              try {
-                  & $step.Script
-                  Write-Host "`r│ ✅ $($step.Name)" -ForegroundColor Green
-              } catch {
-                  Write-Host "`r│ ⚠️  $($step.Name) - Mengabaikan kesalahan kecil" -ForegroundColor Yellow
-              }
-              Start-Sleep -Milliseconds 500
-          }
-          
-          Write-Host "🎯 Konfigurasi selesai!" -ForegroundColor Green
+    - name: KONFIGURASI
+      run: |
+        Write-Host "Menyiapkan layanan..."
 
-      # BUAT USER PREMIUM
-      - name: 👤 BUAT AKUN PREMIUM
-        run: |
-          Write-Host ""
-          Write-Host "👤 SEDANG MEMBUAT AKUN PREMIUM" -ForegroundColor Yellow
-          
-          # Fungsi membuat password pendek (8 karakter) memastikan ada 1 huruf besar, 1 huruf kecil, 1 angka
-          function New-PremiumPassword {
-              param()
-              $upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'   # tidak menyertakan I, O untuk menghindari kesalahan baca
-              $lower = 'abcdefghijkmnpqrstuvwxyz'
-              $numbers = '23456789'                 # tidak menyertakan 0, 1 untuk menghindari kesalahan baca
-              $all = $upper + $lower + $numbers
+        Set-ItemProperty `
+          -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' `
+          -Name fDenyTSConnections `
+          -Value 0 -Force
 
-              # memastikan ada 1 huruf besar, 1 huruf kecil, 1 angka
-              $pw = ''
-              $pw += $upper[(Get-Random -Minimum 0 -Maximum $upper.Length)]
-              $pw += $lower[(Get-Random -Minimum 0 -Maximum $lower.Length)]
-              $pw += $numbers[(Get-Random -Minimum 0 -Maximum $numbers.Length)]
+        Set-ItemProperty `
+          -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' `
+          -Name UserAuthentication `
+          -Value 0 -Force
 
-              # tambah karakter acak hingga mencapai 8 karakter
-              for ($i = 1; $i -le 5; $i++) {
-                  $pw += $all[(Get-Random -Minimum 0 -Maximum $all.Length)]
-              }
+        netsh advfirewall firewall add rule name="MZWEBSITE-IN" dir=in action=allow protocol=TCP localport=3389
+        netsh advfirewall firewall add rule name="MZWEBSITE-OUT" dir=out action=allow protocol=TCP localport=3389
 
-              # acak posisi karakter lalu kembalikan hasilnya
-              return -join ($pw.ToCharArray() | Sort-Object { Get-Random })
-          }
+        Start-Service TermService
+        Write-Host "Konfigurasi selesai." -ForegroundColor Green
 
-          # Jika pengguna menyetel password kustom (misal lewat secret), prioritaskan itu
-          if ($env:CUSTOM_RDP_PASS) {
-              $matKhau = $env:CUSTOM_RDP_PASS
-              Write-Host "│ ℹ️  Menggunakan kata sandi kustom dari env" -ForegroundColor Blue
-          } else {
-              $matKhau = New-PremiumPassword
-          }
+    - name: BUAT AKUN
+      run: |
+        $username = "MZWEBSITE"
+        $password = "akun#123"
 
-          $securePass = ConvertTo-SecureString $matKhau -AsPlainText -Force
-          
-          # Hapus user lama jika ada
-          try {
-              Remove-LocalUser -Name "AISTV-PREMIUM" -ErrorAction SilentlyContinue
-              Write-Host "│ ✅ Sudah menghapus user lama" -ForegroundColor Green
-          } catch {
-              Write-Host "│ ℹ️  Tidak ada user lama untuk dihapus" -ForegroundColor Blue
-          }
-          
-          # Buat user baru dengan akses penuh
-          try {
-              New-LocalUser -Name "AISTV-PREMIUM" -Password $securePass -AccountNeverExpires -Description "AI STV Premium Account"
-              Write-Host "│ ✅ Sudah membuat user baru" -ForegroundColor Green
-              
-              # Set password agar tidak pernah kadaluarsa
-              try {
-                  Set-LocalUser -Name "AISTV-PREMIUM" -PasswordNeverExpires $true -ErrorAction SilentlyContinue
-              } catch {
-                  # Abaikan jika lingkungan tidak mendukung Set-LocalUser
-              }
+        Write-Host "Menyiapkan akun..."
 
-              # Tambahkan ke grup yang diperlukan
-              Add-LocalGroupMember -Group "Administrators" -Member "AISTV-PREMIUM" -ErrorAction SilentlyContinue
-              Add-LocalGroupMember -Group "Remote Desktop Users" -Member "AISTV-PREMIUM" -ErrorAction SilentlyContinue
-              Add-LocalGroupMember -Group "Users" -Member "AISTV-PREMIUM" -ErrorAction SilentlyContinue
-              
-              # Aktifkan user
-              Enable-LocalUser -Name "AISTV-PREMIUM"
-              
-              Write-Host "│ ✅ Sudah memberikan izin Administrator & RDP" -ForegroundColor Green
-              
-          } catch {
-              Write-Host "│ ❌ Gagal membuat user: $($_.Exception.Message)" -ForegroundColor Red
-              exit 1
-          }
-          
-          # Simpan informasi
-          echo "RDP_USER=AISTV-PREMIUM" >> $env:GITHUB_ENV
-          echo "RDP_PASS=$matKhau" >> $env:GITHUB_ENV
-          echo "$matKhau" > $env:TEMP\rdp_password.txt
-          
-          Write-Host "✅ Akun: AISTV-PREMIUM sudah siap" -ForegroundColor Green
+        Remove-LocalUser -Name $username -ErrorAction SilentlyContinue
 
-      # PERIKSA IZIN LOGIN
-      - name: 🔍 PERIKSA IZIN SISTEM
-        run: |
-          Write-Host ""
-          Write-Host "🔍 PERIKSA IZIN LOGIN" -ForegroundColor Yellow
-          
-          # Periksa keberadaan user
-          $user = Get-LocalUser -Name "AISTV-PREMIUM" -ErrorAction SilentlyContinue
-          if ($user) {
-              Write-Host "│ ✅ User AISTV-PREMIUM tersedia" -ForegroundColor Green
-              Write-Host "│ 📊 Status: $($user.Enabled)" -ForegroundColor White
-          } else {
-              Write-Host "│ ❌ User tidak ditemukan" -ForegroundColor Red
-              exit 1
-          }
-          
-          # Periksa hak Administrator
-          $isAdmin = (Get-LocalGroupMember -Group "Administrators" | Where-Object {$_.Name -like "*AISTV-PREMIUM"}).Count -gt 0
-          if ($isAdmin) {
-              Write-Host "│ ✅ Memiliki izin Administrator" -ForegroundColor Green
-          } else {
-              Write-Host "│ ❌ Tidak memiliki izin Administrator" -ForegroundColor Red
-          }
-          
-          # Periksa hak Remote Desktop
-          $isRDPUser = (Get-LocalGroupMember -Group "Remote Desktop Users" | Where-Object {$_.Name -like "*AISTV-PREMIUM"}).Count -gt 0
-          if ($isRDPUser) {
-              Write-Host "│ ✅ Memiliki izin Remote Desktop" -ForegroundColor Green
-          } else {
-              Write-Host "│ ❌ Tidak memiliki izin Remote Desktop" -ForegroundColor Red
-          }
-          
-          # Periksa layanan RDP
-          $termService = Get-Service -Name TermService -ErrorAction SilentlyContinue
-          if ($termService.Status -eq 'Running') {
-              Write-Host "│ ✅ Layanan TermService sedang berjalan" -ForegroundColor Green
-          } else {
-              Write-Host "│ ❌ Layanan TermService tidak berjalan" -ForegroundColor Red
-          }
-          
-          Write-Host "🎯 Pemeriksaan selesai!" -ForegroundColor Green
+        $securePass = ConvertTo-SecureString $password -AsPlainText -Force
 
-      # TAILSCALE PREMIUM
-      - name: 🌐 PENGATURAN JARINGAN PREMIUM
-        env:
-          TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
-        run: |
-          Write-Host ""
-          Write-Host "🌐 SEDANG MENGATUR KONEKSI JARINGAN" -ForegroundColor Yellow
-          
-          # Instalasi Tailscale
-          try {
-              $msiPath = "$env:TEMP\tailscale-premium.msi"
-              Invoke-WebRequest -Uri "https://pkgs.tailscale.com/stable/tailscale-setup-latest-amd64.msi" -OutFile $msiPath
-              Start-Process msiexec.exe -ArgumentList "/i", "`"$msiPath`"", "/quiet", "/norestart" -Wait
-              Remove-Item $msiPath -Force -ErrorAction SilentlyContinue
-              Write-Host "│ ✅ Instalasi Tailscale berhasil" -ForegroundColor Green
-          } catch {
-              Write-Host "│ ❌ Gagal menginstal Tailscale" -ForegroundColor Red
-          }
-          
-          # Tunggu layanan mulai
-          Start-Sleep -Seconds 10
-          
-          # Hubungkan Tailscale
-          try {
-              & "$env:ProgramFiles\Tailscale\tailscale.exe" up --authkey=$env:TAILSCALE_AUTH_KEY --hostname=ai-stv-premium-$env:GITHUB_RUN_ID --accept-routes --accept-dns --reset
-              Write-Host "│ ✅ Koneksi Tailscale berhasil" -ForegroundColor Green
-          } catch {
-              Write-Host "│ ❌ Gagal menghubungkan Tailscale" -ForegroundColor Red
-          }
-          
-          # Ambil IP dengan mekanisme retry
-          Write-Host "🔄 Sedang mengambil alamat IP..." -NoNewline -ForegroundColor Blue
-          $ip = $null
-          for($i=0; $i -lt 20; $i++) {
-              try {
-                  $ip = & "$env:ProgramFiles\Tailscale\tailscale.exe" ip -4 2>&1
-                  if ($ip -and $ip -match '^\d+\.\d+\.\d+\.\d+$') {
-                      echo "TAILSCALE_IP=$ip" >> $env:GITHUB_ENV
-                      Write-Host "`r✅ Alamat IP: $ip" -ForegroundColor Green
-                      break
-                  }
-              } catch {
-                  # Abaikan dan coba lagi
-              }
-              Write-Host "`r🔄 Sedang mengambil alamat IP... $(@('.', '..', '...')[$i % 3])" -NoNewline -ForegroundColor Blue
-              Start-Sleep -Seconds 3
-          }
-          
-          if (-not $ip -or $ip -notmatch '^\d+\.\d+\.\d+\.\d+$') {
-              Write-Host "`r⚠️  Tidak dapat mengambil IP, menggunakan localhost" -ForegroundColor Yellow
-              echo "TAILSCALE_IP=localhost" >> $env:GITHUB_ENV
-          }
+        New-LocalUser `
+          -Name $username `
+          -Password $securePass `
+          -AccountNeverExpires `
+          -Description "MZWEBSITE Account"
 
-      # TAMPILKAN ANTARMUKA
-      - name: 🎉 INFORMASI KONEKSI
-        run: |
-          $matKhau = Get-Content $env:TEMP\rdp_password.txt -ErrorAction SilentlyContinue
-          if (-not $matKhau) {
-              $matKhau = "Tidak dapat membaca kata sandi"
-          }
-          
-          # Konversi input durasi ke menit
-          $durationInput = "${{ github.event.inputs.duration }}"
-          switch ($durationInput) {
-              "1h" { $totalMinutes = 60; $displayTime = "1 jam" }
-              "3h" { $totalMinutes = 180; $displayTime = "3 jam" }
-              "5h40m" { $totalMinutes = 340; $displayTime = "5 jam 40 menit" }
-          }
-          
-          # Hitung waktu yang tepat
-          $timeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById("SE Asia Standard Time")
-          $thoiGianBatDau = [System.TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $timeZone)
-          $thoiGianKetThuc = $thoiGianBatDau.AddMinutes($totalMinutes)
-          
-          Write-Host ""
-          Write-Host "┌───────────────────────────────────────────┐" -ForegroundColor Cyan
-          Write-Host "│           🎉 KONEKSI BERHASIL!            │" -ForegroundColor Cyan
-          Write-Host "├───────────────────────────────────────────┤" -ForegroundColor Cyan
-          Write-Host "│ 🌐  Alamat: $env:TAILSCALE_IP" -ForegroundColor White
-          Write-Host "│ 👤  Akun: AISTV-PREMIUM" -ForegroundColor White
-          Write-Host "│ 🔐  Kata Sandi: $matKhau" -ForegroundColor White
-          Write-Host "│ ⏰  Durasi: $displayTime" -ForegroundColor White
-          Write-Host "│ 🕐  Mulai: $($thoiGianBatDau.ToString('HH:mm:ss'))" -ForegroundColor White
-          Write-Host "│ 🕐  Selesai: $($thoiGianKetThuc.ToString('HH:mm:ss'))" -ForegroundColor White
-          Write-Host "│ 📍  Port: 3389" -ForegroundColor White
-          Write-Host "├───────────────────────────────────────────┤" -ForegroundColor Cyan
-          Write-Host "│ 💡  Instruksi:                            │" -ForegroundColor Cyan
-          Write-Host "│   1. Buka Remote Desktop Connection       │" -ForegroundColor Yellow
-          Write-Host "│   2. Masukkan: $env:TAILSCALE_IP          │" -ForegroundColor Yellow
-          Write-Host "│   3. User: AISTV-PREMIUM | Pass: di atas  │" -ForegroundColor Yellow
-          Write-Host "│   4. Enjoy! 🚀                            │" -ForegroundColor Yellow
-          Write-Host "└───────────────────────────────────────────┘" -ForegroundColor Cyan
-          
-          # Simpan durasi ke variabel lingkungan
-          echo "TOTAL_MINUTES=$totalMinutes" >> $env:GITHUB_ENV
+        Set-LocalUser -Name $username -PasswordNeverExpires $true
 
-      # PERTAHANKAN SESI STABIL
-      - name: ⏳ PERTAHANKAN SESI KERJA
-        run: |
-          $matKhau = Get-Content $env:TEMP\rdp_password.txt -ErrorAction SilentlyContinue
-          $totalMinutes = $env:TOTAL_MINUTES
-          
-          # Hitung waktu yang tepat
-          $timeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById("SE Asia Standard Time")
-          $thoiGianBatDau = [System.TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $timeZone)
-          $thoiGianKetThuc = $thoiGianBatDau.AddMinutes($totalMinutes)
-          
-          Write-Host ""
-          Write-Host "🔄 MULAI MEMPERTAHANKAN SESI KERJA..." -ForegroundColor Yellow
-          Write-Host "💎 Sesi: AI STV PREMIUM" -ForegroundColor Magenta
-          Write-Host "🔗 Koneksi: $env:TAILSCALE_IP" -ForegroundColor Cyan
-          Write-Host "🕐 Mulai: $($thoiGianBatDau.ToString('HH:mm:ss'))" -ForegroundColor Green
-          Write-Host "🕐 Selesai: $($thoiGianKetThuc.ToString('HH:mm:ss'))" -ForegroundColor Green
-          Write-Host ""
-          
-          # Membuat proses pemantauan sistem
-          $monitorScript = {
-              $lastLogTime = Get-Date
-              while ($true) {
-                  $currentTime = Get-Date
-                  
-                  # Log status setiap 2 menit
-                  if (($currentTime - $lastLogTime).TotalMinutes -ge 2) {
-                      # Periksa layanan
-                      $termService = Get-Service -Name TermService -ErrorAction SilentlyContinue
-                      $rdpConnections = Get-NetTCPConnection -LocalPort 3389 -ErrorAction SilentlyContinue | Where-Object {$_.State -eq 'Established'}
-                      
-                      Write-Host "[$($currentTime.ToString('HH:mm:ss'))] 📊 Status - RDP: $($termService.Status), Koneksi: $($rdpConnections.Count)" -ForegroundColor Blue
-                      $lastLogTime = $currentTime
-                  }
-                  
-                  # Periksa dan restart layanan jika diperlukan
-                  $termService = Get-Service -Name TermService -ErrorAction SilentlyContinue
-                  if ($termService.Status -ne 'Running') {
-                      Write-Host "[$($currentTime.ToString('HH:mm:ss'))] 🔄 Memulai ulang TermService..." -ForegroundColor Yellow
-                      Start-Service -Name TermService -ErrorAction SilentlyContinue
-                  }
-                  
-                  Start-Sleep -Seconds 30
-              }
-          }
-          
-          # Jalankan monitor di background
-          Start-Job -ScriptBlock $monitorScript -Name "SystemMonitor"
-          
-          # Tampilkan timer utama
-          $frames = @('⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏')
-          $colors = @('Red', 'Yellow', 'Green', 'Cyan', 'Blue', 'Magenta')
-          $startTime = Get-Date
-          
-          do {
-              $thoiGianHienTai = [System.TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $timeZone)
-              $thoiGianConLai = $thoiGianKetThuc - $thoiGianHienTai
-              
-              $gioConLai = [math]::Max(0, [math]::Floor($thoiGianConLai.TotalHours))
-              $phutConLai = [math]::Max(0, [math]::Floor($thoiGianConLai.TotalMinutes % 60))
-              $giayConLai = [math]::Max(0, [math]::Floor($thoiGianConLai.TotalSeconds % 60))
-              
-              $frame = $frames[([int]((Get-Date) - $startTime).TotalSeconds) % $frames.Length]
-              $color = $colors[([int]((Get-Date) - $startTime).TotalMinutes) % $colors.Length]
-              
-              Write-Host "`r$frame [$($thoiGianHienTai.ToString('HH:mm:ss'))] Waktu tersisa: $gioConLai jam $phutConLai menit $giayConLai detik" -NoNewline -ForegroundColor $color
-              
-              Start-Sleep -Seconds 5
-              
-          } while ($thoiGianConLai.TotalSeconds -gt 0)
-          
-          Write-Host ""
-          Write-Host "🎯 WAKTU HABIS - BERHENTI OTOMATIS!" -ForegroundColor Red
-          
-          # Hentikan jobs
-          Get-Job -Name "SystemMonitor" -ErrorAction SilentlyContinue | Stop-Job -PassThru | Remove-Job -Force
+        Add-LocalGroupMember Administrators $username
+        Add-LocalGroupMember "Remote Desktop Users" $username
 
-      # BERSIHKAN SISTEM
-      - name: 🧹 BERSIHKAN SISTEM
-        if: always()
-        run: |
-          Write-Host ""
-          Write-Host "🧹 SEDANG MEMBERSIHKAN SISTEM..." -ForegroundColor Yellow
-          
-          $cleanupSteps = @(
-              @{Name="Hapus file password"; Script={
-                  Remove-Item "$env:TEMP\rdp_password.txt" -ErrorAction SilentlyContinue
-              }},
-              @{Name="Nonaktifkan user"; Script={
-                  Disable-LocalUser -Name "AISTV-PREMIUM" -ErrorAction SilentlyContinue
-              }},
-              @{Name="Tutup koneksi jaringan"; Script={
-                  & "$env:ProgramFiles\Tailscale\tailscale.exe" down --accept-risk=all -ErrorAction SilentlyContinue
-                  Start-Sleep -Seconds 5
-              }},
-              @{Name="Hapus aturan firewall"; Script={
-                  netsh advfirewall firewall delete rule name="RDP-Premium" dir=in -ErrorAction SilentlyContinue
-                  netsh advfirewall firewall delete rule name="RDP-Premium-Out" dir=out -ErrorAction SilentlyContinue
-                  Remove-NetFirewallRule -DisplayName "RDP-Premium" -ErrorAction SilentlyContinue
-                  Remove-NetFirewallRule -DisplayName "RDP-Premium-Out" -ErrorAction SilentlyContinue
-              }},
-              @{Name="Kembalikan pengaturan RDP"; Script={
-                  Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 1 -Force -ErrorAction SilentlyContinue
-                  Stop-Service -Name TermService -Force -ErrorAction SilentlyContinue
-              }}
-          )
-          
-          foreach($step in $cleanupSteps) {
-              Write-Host "│ 🗑️  $($step.Name)..." -NoNewline -ForegroundColor Gray
-              try {
-                  & $step.Script
-                  Write-Host "`r│ ✅ $($step.Name)" -ForegroundColor Green
-              } catch {
-                  Write-Host "`r│ ⚠️  $($step.Name) - Berhasil ditangani dengan aman" -ForegroundColor Yellow
-              }
-              Start-Sleep -Milliseconds 300
-          }
-          
-          # Bersihkan sisa jobs
-          Get-Job | Stop-Job -PassThru | Remove-Job -Force -ErrorAction SilentlyContinue
-          
-          Write-Host ""
-          Write-Host "🎉 Pembersihan selesai! Sampai jumpa! 👋" -ForegroundColor Green
+        Enable-LocalUser $username
+
+        echo "USER_NAME=$username" >> $env:GITHUB_ENV
+        echo "USER_PASS=$password" >> $env:GITHUB_ENV
+        echo $password > $env:TEMP\user_pass.txt
+
+        Write-Host "Akun siap." -ForegroundColor Green
+
+    - name: JARINGAN
+      env:
+        TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
+      run: |
+        Write-Host "Menyiapkan jaringan..."
+
+        $msi = "$env:TEMP\tailscale.msi"
+        Invoke-WebRequest https://pkgs.tailscale.com/stable/tailscale-setup-latest-amd64.msi -OutFile $msi
+        Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /quiet /norestart" -Wait
+
+        & "$env:ProgramFiles\Tailscale\tailscale.exe" up `
+          --authkey=$env:TAILSCALE_AUTH_KEY `
+          --hostname=mzwebsite-$env:GITHUB_RUN_ID `
+          --accept-dns `
+          --reset
+
+        $ip = & "$env:ProgramFiles\Tailscale\tailscale.exe" ip -4
+        echo "ADDRESS=$ip" >> $env:GITHUB_ENV
+
+        Write-Host "Jaringan aktif." -ForegroundColor Green
+
+    - name: INFORMASI
+      run: |
+        $pass = Get-Content $env:TEMP\user_pass.txt
+        $duration = "${{ github.event.inputs.duration }}"
+
+        switch ($duration) {
+          "1h"    { $totalMinutes = 60 }
+          "3h"    { $totalMinutes = 180 }
+          "5h40m" { $totalMinutes = 340 }
+        }
+
+        echo "TOTAL_MINUTES=$totalMinutes" >> $env:GITHUB_ENV
+
+        Write-Host ""
+        Write-Host "INFORMASI AKSES"
+        Write-Host "Alamat  : $env:ADDRESS"
+        Write-Host "User    : MZWEBSITE"
+        Write-Host "Sandi   : $pass"
+        Write-Host "Durasi  : $duration"
+
+    - name: JALANKAN SESI
+      run: |
+        $totalMinutes = [int]$env:TOTAL_MINUTES
+        $endTime = (Get-Date).AddMinutes($totalMinutes)
+
+        Write-Host "Sesi aktif. Pembaruan setiap 5 menit."
+
+        while ((Get-Date) -lt $endTime) {
+          $now = Get-Date
+          $remain = $endTime - $now
+
+          Write-Host ("[{0}] Sisa waktu: {1} jam {2} menit" -f `
+            $now.ToString("HH:mm:ss"),
+            [math]::Floor($remain.TotalHours),
+            $remain.Minutes)
+
+          Start-Sleep -Seconds 300
+        }
+
+        Write-Host "Durasi selesai." -ForegroundColor Red
+
+    - name: BERSIHKAN
+      if: always()
+      run: |
+        Write-Host "Membersihkan sistem..."
+
+        Disable-LocalUser MZWEBSITE -ErrorAction SilentlyContinue
+        Remove-Item "$env:TEMP\user_pass.txt" -ErrorAction SilentlyContinue
+
+        & "$env:ProgramFiles\Tailscale\tailscale.exe" down -ErrorAction SilentlyContinue
+
+        netsh advfirewall firewall delete rule name="MZWEBSITE-IN" dir=in
+        netsh advfirewall firewall delete rule name="MZWEBSITE-OUT" dir=out
+
+        Set-ItemProperty `
+          -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' `
+          -Name fDenyTSConnections `
+          -Value 1 -Force
+
+        Write-Host "Selesai." -ForegroundColor Green
