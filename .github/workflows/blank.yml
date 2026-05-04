@@ -85,11 +85,10 @@ jobs:
       run: |
         Write-Host "Menyiapkan jaringan via Headscale (self-hosted)..."
 
-        # Download Tailscale versi terbaru (compatible dengan Headscale)
-        $tailscaleVersion = "1.80.3"
-        $msi = "$env:TEMP\tailscale.msi"
+        $release = Invoke-RestMethod "https://pkgs.tailscale.com/stable/?mode=json"
+        $tailscaleVersion = $release.version
 
-        Write-Host "Mengunduh Tailscale v$tailscaleVersion..."
+        $msi = "$env:TEMP\tailscale.msi"
         Invoke-WebRequest `
           "https://pkgs.tailscale.com/stable/tailscale-setup-$tailscaleVersion-amd64.msi" `
           -OutFile $msi
@@ -97,10 +96,8 @@ jobs:
         Write-Host "Menginstal Tailscale..."
         Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /quiet /norestart" -Wait
 
-        # Tunggu service siap
         Start-Sleep -Seconds 5
 
-        # Login ke Headscale (self-hosted) bukan ke Tailscale cloud
         Write-Host "Menghubungkan ke Headscale server: $env:HEADSCALE_URL"
 
         & "$env:ProgramFiles\Tailscale\tailscale.exe" up `
@@ -111,14 +108,11 @@ jobs:
           --accept-routes `
           --reset
 
-        # Tunggu koneksi stabil
         Start-Sleep -Seconds 8
 
-        # Ambil IP dari Headscale network
         $ip = & "$env:ProgramFiles\Tailscale\tailscale.exe" ip -4
         echo "ADDRESS=$ip" >> $env:GITHUB_ENV
 
-        # Verifikasi status koneksi
         $status = & "$env:ProgramFiles\Tailscale\tailscale.exe" status
         Write-Host "Status Tailscale:"
         Write-Host $status
@@ -157,9 +151,8 @@ jobs:
           $now = Get-Date
           $remain = $endTime - $now
 
-          # Cek status koneksi Headscale setiap iterasi
           $tsStatus = & "$env:ProgramFiles\Tailscale\tailscale.exe" status --json 2>$null
-          
+
           Write-Host ("[{0}] Sisa: {1} jam {2} menit | IP: {3}" -f `
             $now.ToString("HH:mm:ss"),
             [math]::Floor($remain.TotalHours),
@@ -176,9 +169,11 @@ jobs:
       run: |
         Write-Host "Membersihkan sistem..."
 
-        # Disconnect dari Headscale
-        & "$env:ProgramFiles\Tailscale\tailscale.exe" logout -ErrorAction SilentlyContinue
-        & "$env:ProgramFiles\Tailscale\tailscale.exe" down -ErrorAction SilentlyContinue
+        $tsExe = "$env:ProgramFiles\Tailscale\tailscale.exe"
+        if (Test-Path $tsExe) {
+          & $tsExe logout -ErrorAction SilentlyContinue
+          & $tsExe down -ErrorAction SilentlyContinue
+        }
 
         Disable-LocalUser MZWEBSITE -ErrorAction SilentlyContinue
         Remove-Item "$env:TEMP\user_pass.txt" -ErrorAction SilentlyContinue
