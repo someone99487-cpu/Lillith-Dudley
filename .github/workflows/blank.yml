@@ -85,13 +85,28 @@ jobs:
       run: |
         Write-Host "Menyiapkan jaringan via Headscale (self-hosted)..."
 
-        $release = Invoke-RestMethod "https://pkgs.tailscale.com/stable/?mode=json"
-        $tailscaleVersion = $release.version
-
         $msi = "$env:TEMP\tailscale.msi"
-        Invoke-WebRequest `
-          "https://pkgs.tailscale.com/stable/tailscale-setup-$tailscaleVersion-amd64.msi" `
-          -OutFile $msi
+        
+        # Gunakan URL download yang stabil tanpa parsing versi
+        $tailscaleUrl = "https://pkgs.tailscale.com/stable/tailscale-setup-windows-amd64.msi"
+        
+        Write-Host "Mengunduh Tailscale dari: $tailscaleUrl"
+        
+        try {
+          Invoke-WebRequest `
+            -Uri $tailscaleUrl `
+            -OutFile $msi `
+            -ErrorAction Stop
+          
+          if (-not (Test-Path $msi)) {
+            throw "File tidak ditemukan setelah download"
+          }
+          
+          Write-Host "Download berhasil." -ForegroundColor Green
+        } catch {
+          Write-Host "Error mengunduh Tailscale: $_" -ForegroundColor Red
+          exit 1
+        }
 
         Write-Host "Menginstal Tailscale..."
         Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /quiet /norestart" -Wait
