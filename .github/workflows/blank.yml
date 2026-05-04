@@ -15,7 +15,7 @@ on:
 
 jobs:
   SETUP:
-    runs-on: windows-2022
+    runs-on: windows-2019
     timeout-minutes: 340
 
     steps:
@@ -30,7 +30,7 @@ jobs:
 
     - name: KONFIGURASI
       run: |
-        Write-Host "Menyiapkan layanan RDP..."
+        Write-Host "Menyiapkan layanan..."
 
         Set-ItemProperty `
           -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' `
@@ -78,61 +78,26 @@ jobs:
 
         Write-Host "Akun siap." -ForegroundColor Green
 
-    - name: JARINGAN - HEADSCALE
+    - name: JARINGAN
       env:
-        HEADSCALE_AUTH_KEY: ${{ secrets.HEADSCALE_AUTH_KEY }}
-        HEADSCALE_URL: ${{ secrets.HEADSCALE_URL }}
+        TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
       run: |
-        Write-Host "Menyiapkan jaringan via Headscale (self-hosted)..."
+        Write-Host "Menyiapkan jaringan..."
 
         $msi = "$env:TEMP\tailscale.msi"
-        
-        # Gunakan URL download yang stabil tanpa parsing versi
-        $tailscaleUrl = "https://pkgs.tailscale.com/stable/tailscale-setup-windows-amd64.msi"
-        
-        Write-Host "Mengunduh Tailscale dari: $tailscaleUrl"
-        
-        try {
-          Invoke-WebRequest `
-            -Uri $tailscaleUrl `
-            -OutFile $msi `
-            -ErrorAction Stop
-          
-          if (-not (Test-Path $msi)) {
-            throw "File tidak ditemukan setelah download"
-          }
-          
-          Write-Host "Download berhasil." -ForegroundColor Green
-        } catch {
-          Write-Host "Error mengunduh Tailscale: $_" -ForegroundColor Red
-          exit 1
-        }
-
-        Write-Host "Menginstal Tailscale..."
+        Invoke-WebRequest https://pkgs.tailscale.com/stable/tailscale-setup-latest-amd64.msi -OutFile $msi
         Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /quiet /norestart" -Wait
 
-        Start-Sleep -Seconds 5
-
-        Write-Host "Menghubungkan ke Headscale server: $env:HEADSCALE_URL"
-
         & "$env:ProgramFiles\Tailscale\tailscale.exe" up `
-          --login-server=$env:HEADSCALE_URL `
-          --authkey=$env:HEADSCALE_AUTH_KEY `
+          --authkey=$env:TAILSCALE_AUTH_KEY `
           --hostname=mzwebsite-$env:GITHUB_RUN_ID `
           --accept-dns `
-          --accept-routes `
           --reset
-
-        Start-Sleep -Seconds 8
 
         $ip = & "$env:ProgramFiles\Tailscale\tailscale.exe" ip -4
         echo "ADDRESS=$ip" >> $env:GITHUB_ENV
 
-        $status = & "$env:ProgramFiles\Tailscale\tailscale.exe" status
-        Write-Host "Status Tailscale:"
-        Write-Host $status
-
-        Write-Host "Jaringan aktif via Headscale." -ForegroundColor Green
+        Write-Host "Jaringan aktif." -ForegroundColor Green
 
     - name: INFORMASI
       run: |
@@ -148,12 +113,11 @@ jobs:
         echo "TOTAL_MINUTES=$totalMinutes" >> $env:GITHUB_ENV
 
         Write-Host ""
-        Write-Host "===== INFORMASI AKSES =====" -ForegroundColor Yellow
-        Write-Host "Headscale IP : $env:ADDRESS"
-        Write-Host "User         : MZWEBSITE"
-        Write-Host "Sandi        : $pass"
-        Write-Host "Durasi       : $duration"
-        Write-Host "===========================" -ForegroundColor Yellow
+        Write-Host "INFORMASI AKSES"
+        Write-Host "Alamat  : $env:ADDRESS"
+        Write-Host "User    : MZWEBSITE"
+        Write-Host "Sandi   : $pass"
+        Write-Host "Durasi  : $duration"
 
     - name: JALANKAN SESI
       run: |
@@ -166,13 +130,10 @@ jobs:
           $now = Get-Date
           $remain = $endTime - $now
 
-          $tsStatus = & "$env:ProgramFiles\Tailscale\tailscale.exe" status --json 2>$null
-
-          Write-Host ("[{0}] Sisa: {1} jam {2} menit | IP: {3}" -f `
+          Write-Host ("[{0}] Sisa waktu: {1} jam {2} menit" -f `
             $now.ToString("HH:mm:ss"),
             [math]::Floor($remain.TotalHours),
-            $remain.Minutes,
-            $env:ADDRESS)
+            $remain.Minutes)
 
           Start-Sleep -Seconds 300
         }
@@ -184,14 +145,10 @@ jobs:
       run: |
         Write-Host "Membersihkan sistem..."
 
-        $tsExe = "$env:ProgramFiles\Tailscale\tailscale.exe"
-        if (Test-Path $tsExe) {
-          & $tsExe logout -ErrorAction SilentlyContinue
-          & $tsExe down -ErrorAction SilentlyContinue
-        }
-
         Disable-LocalUser MZWEBSITE -ErrorAction SilentlyContinue
         Remove-Item "$env:TEMP\user_pass.txt" -ErrorAction SilentlyContinue
+
+        & "$env:ProgramFiles\Tailscale\tailscale.exe" down -ErrorAction SilentlyContinue
 
         netsh advfirewall firewall delete rule name="MZWEBSITE-IN" dir=in
         netsh advfirewall firewall delete rule name="MZWEBSITE-OUT" dir=out
